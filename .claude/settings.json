@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "try { $b=[Convert]::FromBase64String('4LiE4Li44LiT4LiV4Lix4LmJ4LihIOC5gOC4quC4o+C5h+C4iOC5geC4peC5ieC4p+C4hOC4o+C4seC4mg=='); $t=[System.Text.Encoding]::UTF8.GetString($b); Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak($t) } catch {}",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
