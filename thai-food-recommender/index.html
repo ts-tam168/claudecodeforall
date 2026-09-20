@@ -106,6 +106,112 @@
     font-size: 0.8rem;
   }
 
+  .ingredients-btn {
+    display: block;
+    margin: 16px auto 0;
+    background: none;
+    border: 1px solid var(--gold-light);
+    color: var(--red-dark);
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+
+  .ingredients-btn:hover {
+    background: var(--cream-2);
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(58, 35, 24, 0.5);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 100;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal-box {
+    position: relative;
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px 24px 24px;
+    max-width: 420px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    text-align: center;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #a07a4f;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .modal-icon {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .modal-icon img {
+    width: 3rem;
+    height: 3rem;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .modal-box h3 {
+    margin: 0 0 2px;
+    color: var(--red-dark);
+    font-size: 1.3rem;
+  }
+
+  .modal-box .modal-name-en {
+    margin: 0 0 16px;
+    color: #a07a4f;
+    font-style: italic;
+    font-size: 0.9rem;
+  }
+
+  .modal-box h4 {
+    margin: 0 0 10px;
+    color: var(--red-dark);
+    font-size: 0.95rem;
+    text-align: left;
+  }
+
+  .ingredients-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  .ingredient-chip {
+    background: var(--cream-2);
+    border: 1px solid var(--gold-light);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+
   .fav-btn {
     position: absolute;
     top: 16px;
@@ -258,6 +364,7 @@
         <p class="featured-name-en" id="featuredNameEn"></p>
         <p class="featured-desc" id="featuredDesc"></p>
         <span class="category-tag" id="featuredCategory"></span>
+        <button class="ingredients-btn" id="ingredientsBtn">📋 ดูส่วนประกอบ</button>
       </section>
 
       <div class="actions">
@@ -274,40 +381,51 @@
     <footer>บันทึกรายการโปรดไว้ในเบราว์เซอร์ของคุณเท่านั้น (localStorage)</footer>
   </div>
 
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalNameTh">
+      <button class="modal-close" id="modalClose" aria-label="ปิด">✕</button>
+      <div class="modal-icon" id="modalIcon"></div>
+      <h3 id="modalNameTh"></h3>
+      <p class="modal-name-en" id="modalNameEn"></p>
+      <h4>ส่วนประกอบ</h4>
+      <div class="ingredients-list" id="modalIngredients"></div>
+    </div>
+  </div>
+
 <script>
   const STORAGE_KEY = "thai-food-favorites";
 
   const dishes = [
-    { id: 1, th: "ผัดไทย", en: "Pad Thai", desc: "เส้นก๋วยเตี๋ยวผัดรสเปรี้ยวหวานกับกุ้งและถั่วงอก", category: "ก๋วยเตี๋ยว", icon: "🍜" },
-    { id: 2, th: "ต้มยำกุ้ง", en: "Tom Yum Goong", desc: "แกงเปรี้ยวเผ็ดกลิ่นสมุนไพรใส่กุ้งแม่น้ำ", category: "แกง", icon: "🍲" },
-    { id: 3, th: "ส้มตำ", en: "Som Tam", desc: "สลัดมะละกอดิบรสเปรี้ยวเผ็ดจัดจ้าน", category: "ยำ-ส้มตำ", icon: "🥗" },
-    { id: 4, th: "แกงมัสมั่น", en: "Massaman Curry", desc: "แกงกะทิรสเข้มข้นหอมเครื่องเทศ ใส่เนื้อและมันฝรั่ง", category: "แกง", icon: "🍛" },
-    { id: 5, th: "แกงเขียวหวาน", en: "Green Curry", desc: "แกงกะทิรสเผ็ดหอมใบโหระพา", category: "แกง", icon: "🍛" },
-    { id: 6, th: "ข้าวผัดกะเพรา", en: "Pad Kra Pao", desc: "ข้าวผัดกะเพราเนื้อสับรสจัดจ้าน ราดไข่ดาว", category: "ผัด", icon: "🌶️", img: "image/chili.png" },
-    { id: 7, th: "ข้าวเหนียวมะม่วง", en: "Mango Sticky Rice", desc: "ข้าวเหนียวมูนกะทิคู่มะม่วงสุก", category: "ของหวาน", icon: "🥭", img: "image/mango.png" },
-    { id: 8, th: "ต้มข่าไก่", en: "Tom Kha Gai", desc: "ซุปไก่กะทิรสเปรี้ยวหอมข่าตะไคร้", category: "แกง", icon: "🍲" },
-    { id: 9, th: "ผัดซีอิ๊ว", en: "Pad See Ew", desc: "เส้นใหญ่ผัดซีอิ๊วดำกับคะน้าและไข่", category: "ก๋วยเตี๋ยว", icon: "🍜" },
-    { id: 10, th: "ข้าวซอย", en: "Khao Soi", desc: "เส้นบะหมี่แกงกะทิเหนือ ราดหน้าเส้นกรอบ", category: "ก๋วยเตี๋ยว", icon: "🍜" },
-    { id: 11, th: "ลาบหมู", en: "Larb Moo", desc: "หมูสับคลุกเครื่องปรุงรสจัดจ้าน ใบสะระแหน่", category: "ยำ-ส้มตำ", icon: "🥘" },
-    { id: 12, th: "แกงป่า", en: "Kaeng Pa", desc: "แกงป่ารสเผ็ดจัดไม่ใส่กะทิ", category: "แกง", icon: "🌶️", img: "image/chili.png" },
-    { id: 13, th: "กล้วยแขก", en: "Fried Banana", desc: "กล้วยชุบแป้งทอดกรอบหอมมัน กินเล่นได้ทุกเวลา", category: "ทอด", icon: "🍌", img: "image/banana.png" },
-    { id: 14, th: "ไก่ทอดหาดใหญ่", en: "Hat Yai Fried Chicken", desc: "ไก่ทอดสมุนไพรกรอบนอกนุ่มใน", category: "ทอด", icon: "🍗" },
-    { id: 15, th: "ปูผัดผงกะหรี่", en: "Stir-fried Crab with Curry Powder", desc: "เนื้อปูผัดผงกะหรี่ไข่ข้น", category: "ผัด", icon: "🦀" },
-    { id: 16, th: "ยำวุ้นเส้น", en: "Yum Woon Sen", desc: "วุ้นเส้นยำรสเปรี้ยวเผ็ดใส่กุ้งและหมูสับ", category: "ยำ-ส้มตำ", icon: "🥗" },
-    { id: 17, th: "แกงส้ม", en: "Kaeng Som", desc: "แกงรสเปรี้ยวเผ็ดใส่ผักและปลา", category: "แกง", icon: "🍲" },
-    { id: 18, th: "ผัดกะเพราทะเล", en: "Seafood Pad Kra Pao", desc: "ผัดกะเพราซีฟู้ดรวมรสจัดจ้าน", category: "ผัด", icon: "🦐" },
-    { id: 19, th: "ทอดมันปลา", en: "Tod Man Pla", desc: "ทอดมันปลากรายเนื้อเด้ง กินคู่อาจาด", category: "ทอด", icon: "🐟" },
-    { id: 20, th: "โอเลี้ยง", en: "Thai Iced Black Coffee", desc: "กาแฟดำเย็นรสเข้มหอมกลิ่นยาชูกำลังแบบไทย", category: "เครื่องดื่ม", icon: "☕" },
-    { id: 21, th: "ปอเปี๊ยะทอด", en: "Fried Spring Rolls", desc: "ปอเปี๊ยะทอดกรอบไส้ผักและวุ้นเส้น", category: "ทอด", icon: "🥟" },
-    { id: 22, th: "ราดหน้า", en: "Rad Na", desc: "เส้นใหญ่ลวกราดน้ำผัดข้นหมูและคะน้า", category: "ก๋วยเตี๋ยว", icon: "🍜" },
-    { id: 23, th: "หอยทอด", en: "Oyster Omelette", desc: "ไข่ทอดหอยแมลงภู่กรอบนอกนุ่มใน", category: "ทอด", icon: "🦪" },
-    { id: 24, th: "แกงจืดเต้าหู้", en: "Clear Tofu Soup", desc: "แกงจืดเต้าหู้หมูสับรสอ่อนละมุน", category: "แกง", icon: "🍲" },
-    { id: 25, th: "น้ำตกหมู", en: "Nam Tok Moo", desc: "หมูย่างสไลซ์คลุกเครื่องปรุงรสจัดจ้าน", category: "ยำ-ส้มตำ", icon: "🥩" },
-    { id: 26, th: "ผัดพริกแกงหมูกรอบ", en: "Stir-fried Crispy Pork with Curry Paste", desc: "หมูกรอบผัดพริกแกงหอมใบมะกรูด", category: "ผัด", icon: "🌶️", img: "image/chili.png" },
-    { id: 27, th: "ขนมครก", en: "Kanom Krok", desc: "ขนมหวานแป้งกะทิหอมมัน อบในเตาดินเผา", category: "ของหวาน", icon: "🍮" },
-    { id: 28, th: "ทับทิมกรอบ", en: "Tub Tim Krob", desc: "ขนมหวานเชือกลูกแห้วเคลือบแป้งคลุกน้ำแข็งกะทิ", category: "ของหวาน", icon: "🍧" },
-    { id: 29, th: "ชาไทย", en: "Thai Iced Tea", desc: "ชานมเย็นสีส้มหวานมันเข้มข้น", category: "เครื่องดื่ม", icon: "🧋" },
-    { id: 30, th: "น้ำมะนาว", en: "Thai Lime Juice", desc: "น้ำมะนาวปั่นรสเปรี้ยวหวานชื่นใจ", category: "เครื่องดื่ม", icon: "🍹" }
+    { id: 1, th: "ผัดไทย", en: "Pad Thai", desc: "เส้นก๋วยเตี๋ยวผัดรสเปรี้ยวหวานกับกุ้งและถั่วงอก", category: "ก๋วยเตี๋ยว", icon: "🍜", ingredients: ["เส้นจันท์", "กุ้งสด", "ไข่ไก่", "เต้าหู้เหลือง", "ถั่วงอก", "ถั่วลิสงบด"] },
+    { id: 2, th: "ต้มยำกุ้ง", en: "Tom Yum Goong", desc: "แกงเปรี้ยวเผ็ดกลิ่นสมุนไพรใส่กุ้งแม่น้ำ", category: "แกง", icon: "🍲", ingredients: ["กุ้งแม่น้ำ", "ตะไคร้", "ใบมะกรูด", "ข่า", "พริกขี้หนู", "มะนาว", "เห็ดฟาง"] },
+    { id: 3, th: "ส้มตำ", en: "Som Tam", desc: "สลัดมะละกอดิบรสเปรี้ยวเผ็ดจัดจ้าน", category: "ยำ-ส้มตำ", icon: "🥗", ingredients: ["มะละกอดิบ", "มะเขือเทศ", "ถั่วฝักยาว", "พริกขี้หนู", "กระเทียม", "มะนาว", "น้ำปลา"] },
+    { id: 4, th: "แกงมัสมั่น", en: "Massaman Curry", desc: "แกงกะทิรสเข้มข้นหอมเครื่องเทศ ใส่เนื้อและมันฝรั่ง", category: "แกง", icon: "🍛", ingredients: ["เนื้อวัว", "มันฝรั่ง", "หัวหอม", "กะทิ", "พริกแกงมัสมั่น", "ถั่วลิสง"] },
+    { id: 5, th: "แกงเขียวหวาน", en: "Green Curry", desc: "แกงกะทิรสเผ็ดหอมใบโหระพา", category: "แกง", icon: "🍛", ingredients: ["เนื้อไก่", "กะทิ", "พริกแกงเขียวหวาน", "มะเขือเปราะ", "ใบโหระพา", "พริกชี้ฟ้า"] },
+    { id: 6, th: "ข้าวผัดกะเพรา", en: "Pad Kra Pao", desc: "ข้าวผัดกะเพราเนื้อสับรสจัดจ้าน ราดไข่ดาว", category: "ผัด", icon: "🌶️", img: "image/chili.png", ingredients: ["เนื้อสับ", "ใบกะเพรา", "พริกขี้หนู", "กระเทียม", "ไข่ดาว", "ซอสปรุงรส"] },
+    { id: 7, th: "ข้าวเหนียวมะม่วง", en: "Mango Sticky Rice", desc: "ข้าวเหนียวมูนกะทิคู่มะม่วงสุก", category: "ของหวาน", icon: "🥭", img: "image/mango.png", ingredients: ["ข้าวเหนียว", "มะม่วงสุก", "กะทิ", "น้ำตาลปี๊บ", "เกลือ"] },
+    { id: 8, th: "ต้มข่าไก่", en: "Tom Kha Gai", desc: "ซุปไก่กะทิรสเปรี้ยวหอมข่าตะไคร้", category: "แกง", icon: "🍲", ingredients: ["เนื้อไก่", "ข่า", "ตะไคร้", "ใบมะกรูด", "กะทิ", "พริกขี้หนู", "มะนาว"] },
+    { id: 9, th: "ผัดซีอิ๊ว", en: "Pad See Ew", desc: "เส้นใหญ่ผัดซีอิ๊วดำกับคะน้าและไข่", category: "ก๋วยเตี๋ยว", icon: "🍜", ingredients: ["เส้นใหญ่", "คะน้า", "ไข่ไก่", "ซีอิ๊วดำ", "หมูหรือไก่"] },
+    { id: 10, th: "ข้าวซอย", en: "Khao Soi", desc: "เส้นบะหมี่แกงกะทิเหนือ ราดหน้าเส้นกรอบ", category: "ก๋วยเตี๋ยว", icon: "🍜", ingredients: ["เส้นบะหมี่", "กะทิ", "พริกแกงข้าวซอย", "เนื้อไก่", "หอมแดงดอง", "ผักกาดดอง"] },
+    { id: 11, th: "ลาบหมู", en: "Larb Moo", desc: "หมูสับคลุกเครื่องปรุงรสจัดจ้าน ใบสะระแหน่", category: "ยำ-ส้มตำ", icon: "🥘", ingredients: ["หมูสับ", "ข้าวคั่ว", "พริกป่น", "น้ำปลา", "มะนาว", "ใบสะระแหน่", "หอมแดง"] },
+    { id: 12, th: "แกงป่า", en: "Kaeng Pa", desc: "แกงป่ารสเผ็ดจัดไม่ใส่กะทิ", category: "แกง", icon: "🌶️", img: "image/chili.png", ingredients: ["เนื้อหมูหรือไก่", "พริกแกงป่า", "หน่อไม้", "ใบมะกรูด", "พริกไทยอ่อน", "กระชาย"] },
+    { id: 13, th: "กล้วยแขก", en: "Fried Banana", desc: "กล้วยชุบแป้งทอดกรอบหอมมัน กินเล่นได้ทุกเวลา", category: "ทอด", icon: "🍌", img: "image/banana.png", ingredients: ["กล้วยน้ำว้า", "แป้งทอดกรอบ", "มะพร้าวขูด", "งาขาว", "น้ำตาล"] },
+    { id: 14, th: "ไก่ทอดหาดใหญ่", en: "Hat Yai Fried Chicken", desc: "ไก่ทอดสมุนไพรกรอบนอกนุ่มใน", category: "ทอด", icon: "🍗", ingredients: ["เนื้อไก่", "ขมิ้น", "กระเทียม", "รากผักชี", "พริกไทย", "แป้งทอดกรอบ"] },
+    { id: 15, th: "ปูผัดผงกะหรี่", en: "Stir-fried Crab with Curry Powder", desc: "เนื้อปูผัดผงกะหรี่ไข่ข้น", category: "ผัด", icon: "🦀", ingredients: ["เนื้อปู", "ผงกะหรี่", "ไข่ไก่", "หัวหอม", "นมสด", "ต้นหอม"] },
+    { id: 16, th: "ยำวุ้นเส้น", en: "Yum Woon Sen", desc: "วุ้นเส้นยำรสเปรี้ยวเผ็ดใส่กุ้งและหมูสับ", category: "ยำ-ส้มตำ", icon: "🥗", ingredients: ["วุ้นเส้น", "กุ้งสด", "หมูสับ", "มะเขือเทศ", "พริกขี้หนู", "มะนาว", "ขึ้นฉ่าย"] },
+    { id: 17, th: "แกงส้ม", en: "Kaeng Som", desc: "แกงรสเปรี้ยวเผ็ดใส่ผักและปลา", category: "แกง", icon: "🍲", ingredients: ["เนื้อปลาหรือกุ้ง", "พริกแกงส้ม", "มะละกอ", "ถั่วฝักยาว", "มะขามเปียก"] },
+    { id: 18, th: "ผัดกะเพราทะเล", en: "Seafood Pad Kra Pao", desc: "ผัดกะเพราซีฟู้ดรวมรสจัดจ้าน", category: "ผัด", icon: "🦐", ingredients: ["กุ้ง", "ปลาหมึก", "ใบกะเพรา", "พริกขี้หนู", "กระเทียม"] },
+    { id: 19, th: "ทอดมันปลา", en: "Tod Man Pla", desc: "ทอดมันปลากรายเนื้อเด้ง กินคู่อาจาด", category: "ทอด", icon: "🐟", ingredients: ["เนื้อปลากราย", "พริกแกงแดง", "ถั่วฝักยาว", "ใบมะกรูด", "ไข่ไก่"] },
+    { id: 20, th: "โอเลี้ยง", en: "Thai Iced Black Coffee", desc: "กาแฟดำเย็นรสเข้มหอมกลิ่นยาชูกำลังแบบไทย", category: "เครื่องดื่ม", icon: "☕", ingredients: ["กาแฟคั่วเข้ม", "น้ำตาล", "น้ำแข็ง"] },
+    { id: 21, th: "ปอเปี๊ยะทอด", en: "Fried Spring Rolls", desc: "ปอเปี๊ยะทอดกรอบไส้ผักและวุ้นเส้น", category: "ทอด", icon: "🥟", ingredients: ["แป้งปอเปี๊ยะ", "วุ้นเส้น", "กะหล่ำปลี", "แครอท", "เห็ดหูหนู"] },
+    { id: 22, th: "ราดหน้า", en: "Rad Na", desc: "เส้นใหญ่ลวกราดน้ำผัดข้นหมูและคะน้า", category: "ก๋วยเตี๋ยว", icon: "🍜", ingredients: ["เส้นใหญ่", "คะน้า", "หมูหรือไก่", "ซอสปรุงรส", "แป้งมัน"] },
+    { id: 23, th: "หอยทอด", en: "Oyster Omelette", desc: "ไข่ทอดหอยแมลงภู่กรอบนอกนุ่มใน", category: "ทอด", icon: "🦪", ingredients: ["หอยแมลงภู่", "แป้งข้าวเจ้า", "ไข่ไก่", "ถั่วงอก", "ต้นหอม"] },
+    { id: 24, th: "แกงจืดเต้าหู้", en: "Clear Tofu Soup", desc: "แกงจืดเต้าหู้หมูสับรสอ่อนละมุน", category: "แกง", icon: "🍲", ingredients: ["เต้าหู้ไข่", "หมูสับ", "ต้นหอม", "กระเทียมเจียว", "ซีอิ๊วขาว"] },
+    { id: 25, th: "น้ำตกหมู", en: "Nam Tok Moo", desc: "หมูย่างสไลซ์คลุกเครื่องปรุงรสจัดจ้าน", category: "ยำ-ส้มตำ", icon: "🥩", ingredients: ["เนื้อหมูย่าง", "ข้าวคั่ว", "พริกป่น", "น้ำปลา", "มะนาว", "ใบสะระแหน่"] },
+    { id: 26, th: "ผัดพริกแกงหมูกรอบ", en: "Stir-fried Crispy Pork with Curry Paste", desc: "หมูกรอบผัดพริกแกงหอมใบมะกรูด", category: "ผัด", icon: "🌶️", img: "image/chili.png", ingredients: ["หมูกรอบ", "พริกแกงเผ็ด", "ใบมะกรูด", "ถั่วฝักยาว", "พริกชี้ฟ้า"] },
+    { id: 27, th: "ขนมครก", en: "Kanom Krok", desc: "ขนมหวานแป้งกะทิหอมมัน อบในเตาดินเผา", category: "ของหวาน", icon: "🍮", ingredients: ["แป้งข้าวเจ้า", "กะทิ", "น้ำตาลปี๊บ", "ต้นหอม", "ข้าวโพดอ่อน"] },
+    { id: 28, th: "ทับทิมกรอบ", en: "Tub Tim Krob", desc: "ขนมหวานเชือกลูกแห้วเคลือบแป้งคลุกน้ำแข็งกะทิ", category: "ของหวาน", icon: "🍧", ingredients: ["แห้วสด", "แป้งมัน", "กะทิ", "น้ำตาลทราย", "น้ำแข็งไส"] },
+    { id: 29, th: "ชาไทย", en: "Thai Iced Tea", desc: "ชานมเย็นสีส้มหวานมันเข้มข้น", category: "เครื่องดื่ม", icon: "🧋", ingredients: ["ชาไทยผง", "นมข้นหวาน", "นมสด", "น้ำแข็ง"] },
+    { id: 30, th: "น้ำมะนาว", en: "Thai Lime Juice", desc: "น้ำมะนาวปั่นรสเปรี้ยวหวานชื่นใจ", category: "เครื่องดื่ม", icon: "🍹", ingredients: ["มะนาว", "น้ำเชื่อม", "โซดาหรือน้ำเปล่า", "น้ำแข็ง"] }
   ];
 
   let favorites = new Set();
@@ -328,6 +446,13 @@
   const randomBtn = document.getElementById("randomBtn");
   const favoritesList = document.getElementById("favoritesList");
   const emptyState = document.getElementById("emptyState");
+  const ingredientsBtn = document.getElementById("ingredientsBtn");
+  const modalOverlay = document.getElementById("modalOverlay");
+  const modalClose = document.getElementById("modalClose");
+  const modalIcon = document.getElementById("modalIcon");
+  const modalNameTh = document.getElementById("modalNameTh");
+  const modalNameEn = document.getElementById("modalNameEn");
+  const modalIngredients = document.getElementById("modalIngredients");
 
   function saveFavorites() {
     try {
@@ -421,8 +546,34 @@
     });
   }
 
+  function openIngredientsModal() {
+    if (modalIcon) {
+      modalIcon.innerHTML = currentDish.img
+        ? `<img src="${currentDish.img}" alt="${currentDish.th}">`
+        : currentDish.icon;
+    }
+    modalNameTh.textContent = currentDish.th;
+    modalNameEn.textContent = currentDish.en;
+    modalIngredients.innerHTML = (currentDish.ingredients || [])
+      .map((item) => `<span class="ingredient-chip">${item}</span>`)
+      .join("");
+    modalOverlay.classList.add("open");
+  }
+
+  function closeIngredientsModal() {
+    modalOverlay.classList.remove("open");
+  }
+
   randomBtn.addEventListener("click", pickRandom);
   favBtn.addEventListener("click", toggleFavorite);
+  ingredientsBtn.addEventListener("click", openIngredientsModal);
+  modalClose.addEventListener("click", closeIngredientsModal);
+  modalOverlay.addEventListener("click", (e) => {
+    if (e.target === modalOverlay) closeIngredientsModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeIngredientsModal();
+  });
 
   pickRandom();
   renderFavorites();
